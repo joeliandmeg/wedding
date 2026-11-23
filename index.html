@@ -322,6 +322,9 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
   </div>
 </footer>
 
+Here's the full block with the fix applied, from the first `<script>` through `</html>`. Paste it over what you have now.
+
+```html
 <script>
 (function () {
   // RSVP replies are delivered to this email address through FormSubmit, a free form service.
@@ -399,7 +402,7 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
     button.textContent = "SENDING...";
 
     var controller = window.AbortController ? new AbortController() : null;
-    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 15000);
+    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 30000);
 
     fetch(ENDPOINT, {
       method: "POST",
@@ -408,14 +411,16 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
       signal: controller ? controller.signal : undefined
     })
       .then(function (r) {
-        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, data: d }; });
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, data: d }; });
       })
       .then(function (res) {
         clearTimeout(timer);
-        var good = res.ok && res.data && (res.data.success === true || res.data.success === "true");
+        console.log("FormSubmit response:", res);
+        var s = res.data && res.data.success;
+        var good = res.ok && s !== false && s !== "false";
         if (good) { showThanks(yes); } else { showFailure(subject, fallbackBody); }
       })
-      .catch(function () { clearTimeout(timer); showFailure(subject, fallbackBody); });
+      .catch(function (err) { clearTimeout(timer); console.error("RSVP error:", err); showFailure(subject, fallbackBody); });
   });
 })();
 </script>
@@ -449,3 +454,8 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
 </script>
 </body>
 </html>
+```
+
+The calendar script is unchanged. Only the RSVP script differs: a 30-second timeout, a more forgiving success check, and console logging.
+
+After you push it, hard-refresh the live site (Ctrl+Shift+R, or Cmd+Shift+R on Mac) so the browser doesn't use the old cached version. If the failure message still appears, press F12, open the Console tab, submit, and send me what it prints.
