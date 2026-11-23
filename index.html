@@ -397,7 +397,7 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
       (yes ? NL + "Number attending: " + party : "") + (note ? NL + "Note: " + note : "");
 
     button.disabled = true;
-    button.textContent = "SENDING...";
+    button.textContent = "SENDING, ONE MOMENT...";
 
     var controller = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 30000);
