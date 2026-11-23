@@ -333,7 +333,7 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
   // RSVP replies are delivered to this email address through FormSubmit, a free form service.
   // To use a different service later, change ENDPOINT below.
   var TO = "joeliandmeg@gmail.com";
-  var ENDPOINT = "https://formsubmit.co" + TO;
+  var ENDPOINT = "https://formsubmit.co/ajax/" + TO;
 
   var form = document.getElementById("rsvp-form");
   var button = form.querySelector('button[type="submit"]');
@@ -389,15 +389,15 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
     // A hidden field that real guests never fill in. If it has text, a bot did it, so we skip sending.
     if (honey && honey.value) { showThanks(yes); return; }
 
-    var formData = new FormData();
-    formData.append("_subject", subject);
-    formData.append("_template", "table");
-    formData.append("_captcha", "false");
-    formData.append("Names", names);
-    formData.append("Response", response);
-    formData.append("Number attending", yes ? party : "Not attending");
-    formData.append("Note", note || "None");
-
+    var payload = {
+      "_subject": subject,
+      "_template": "table",
+      "_captcha": "false",
+      "Names": names,
+      "Response": response,
+      "Number attending": yes ? party : "Not attending",
+      "Note": note || "None"
+    };
     var fallbackBody = "Names: " + names + "\r\nResponse: " + response +
       (yes ? "\r\nNumber attending: " + party : "") + (note ? "\r\nNote: " + note : "");
 
@@ -405,12 +405,12 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
     button.textContent = "SENDING...";
 
     var controller = window.AbortController ? new AbortController() : null;
-    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 20000);
+    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 15000);
 
     fetch(ENDPOINT, {
       method: "POST",
-      headers: { "Accept": "application/json" },
-      body: formData,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload),
       signal: controller ? controller.signal : undefined
     })
       .then(function (r) {
@@ -418,7 +418,7 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
       })
       .then(function (res) {
         clearTimeout(timer);
-        var good = res.ok && (!res.data || (res.data.success !== "false" && res.data.success !== false));
+        var good = res.ok && res.data && (res.data.success === true || res.data.success === "true");
         if (good) { showThanks(yes); } else { showFailure(subject, fallbackBody); }
       })
       .catch(function () { clearTimeout(timer); showFailure(subject, fallbackBody); });
@@ -455,4 +455,3 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
 </script>
 </body>
 </html>
-
