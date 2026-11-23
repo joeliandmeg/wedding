@@ -321,16 +321,11 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
     <p class="when">Sunday, September 26th, 2027</p>
   </div>
 </footer>
-
-Here's the full block with the fix applied, from the first `<script>` through `</html>`. Paste it over what you have now.
-
-```html
 <script>
 (function () {
-  // RSVP replies are delivered to this email address through FormSubmit, a free form service.
-  // To use a different service later, change ENDPOINT below.
   var TO = "joeliandmeg@gmail.com";
   var ENDPOINT = "https://formsubmit.co/ajax/" + TO;
+  var NL = String.fromCharCode(13, 10);
 
   var form = document.getElementById("rsvp-form");
   var button = form.querySelector('button[type="submit"]');
@@ -372,7 +367,7 @@ Here's the full block with the fix applied, from the first `<script>` through `<
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     errorEl.textContent = "";
-    var names = document.getElementById("names-input").value.replace(/\s+/g, " ").trim();
+    var names = document.getElementById("names-input").value.split(" ").filter(Boolean).join(" ").trim();
     var attend = selected();
     if (!names) { errorEl.textContent = "Please enter your name or names."; document.getElementById("names-input").focus(); return; }
     if (!attend) { errorEl.textContent = "Please choose whether you will attend."; return; }
@@ -383,7 +378,6 @@ Here's the full block with the fix applied, from the first `<script>` through `<
     var response = yes ? "Joyfully accepts" : "Regretfully declines";
     var subject = "RSVP: " + names + (yes ? " (attending)" : " (declining)");
 
-    // A hidden field that real guests never fill in. If it has text, a bot did it, so we skip sending.
     if (honey && honey.value) { showThanks(yes); return; }
 
     var payload = {
@@ -395,8 +389,8 @@ Here's the full block with the fix applied, from the first `<script>` through `<
       "Number attending": yes ? party : "Not attending",
       "Note": note || "None"
     };
-    var fallbackBody = "Names: " + names + "\r\nResponse: " + response +
-      (yes ? "\r\nNumber attending: " + party : "") + (note ? "\r\nNote: " + note : "");
+    var fallbackBody = "Names: " + names + NL + "Response: " + response +
+      (yes ? NL + "Number attending: " + party : "") + (note ? NL + "Note: " + note : "");
 
     button.disabled = true;
     button.textContent = "SENDING...";
