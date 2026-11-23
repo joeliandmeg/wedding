@@ -328,7 +328,8 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
 <script>
 (function () {
   var TO = "joeliandmeg@gmail.com";
-  var ENDPOINT = "https://formsubmit.co/ajax/" + TO;
+  var ENDPOINT = "https://api.web3forms.com/submit";
+  var ACCESS_KEY = "ba0e2484-504c-434f-8ad3-d5d8ea8ab07b";
   var NL = String.fromCharCode(13, 10);
 
   var form = document.getElementById("rsvp-form");
@@ -349,7 +350,7 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
 
   function showThanks(yes) {
     document.getElementById("thanks-2").textContent = yes
-      ? "We can't wait to celebrate with you."
+      ? "We cannot wait to celebrate with you."
       : "We will miss you and are grateful that you let us know.";
     form.hidden = true;
     thanks.hidden = false;
@@ -385,9 +386,9 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
     if (honey && honey.value) { showThanks(yes); return; }
 
     var payload = {
-      "_subject": subject,
-      "_template": "table",
-      "_captcha": "false",
+      "access_key": ACCESS_KEY,
+      "subject": subject,
+      "from_name": "Wedding RSVP",
       "Names": names,
       "Response": response,
       "Number attending": yes ? party : "Not attending",
@@ -397,10 +398,10 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
       (yes ? NL + "Number attending: " + party : "") + (note ? NL + "Note: " + note : "");
 
     button.disabled = true;
-    button.textContent = "SENDING, ONE MOMENT...";
+    button.textContent = "SENDING...";
 
     var controller = window.AbortController ? new AbortController() : null;
-    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 30000);
+    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 20000);
 
     fetch(ENDPOINT, {
       method: "POST",
@@ -413,9 +414,9 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
       })
       .then(function (res) {
         clearTimeout(timer);
-        console.log("FormSubmit response:", res);
+        console.log("RSVP response:", res);
         var s = res.data && res.data.success;
-        var good = res.ok && s !== false && s !== "false";
+        var good = res.ok && (s === true || s === "true");
         if (good) { showThanks(yes); } else { showFailure(subject, fallbackBody); }
       })
       .catch(function (err) { clearTimeout(timer); console.error("RSVP error:", err); showFailure(subject, fallbackBody); });
@@ -452,8 +453,3 @@ footer .when{margin:6px 0 0; color:var(--muted); font-style:italic; font-size:16
 </script>
 </body>
 </html>
-```
-
-The calendar script is unchanged. Only the RSVP script differs: a 30-second timeout, a more forgiving success check, and console logging.
-
-After you push it, hard-refresh the live site (Ctrl+Shift+R, or Cmd+Shift+R on Mac) so the browser doesn't use the old cached version. If the failure message still appears, press F12, open the Console tab, submit, and send me what it prints.
